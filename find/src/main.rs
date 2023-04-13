@@ -33,7 +33,7 @@ impl Find {
         let fs_path = PathBuf::from_str(path.as_str())?;
         let mut read_dir = self.read_dir(&fs_path)?;
         
-        let name = name.or(Some("*".into())).unwrap();
+        let name = name.unwrap_or("*".into());
         'inner: loop {
             match read_dir.next() {
                 None => {
@@ -76,16 +76,16 @@ fn main() -> anyhow::Result<()> {
         case_insensitivity: args.case_insensitive,
     };
 
-    return f.find(args.path, args.name);
+    f.find(args.path, args.name)
 }
 
 
 fn match_name(file_name: String, name: &String, case_insensitivity: bool) -> bool {
   
     if name.is_empty() || name == "*" {
-        return true;
+        true
     } else if case_insensitivity {
-        return file_name.to_lowercase().contains(&name.to_lowercase().to_string());
+        return file_name.to_lowercase().contains(&name.to_lowercase());
     }
     else {
         return file_name.contains(name);
