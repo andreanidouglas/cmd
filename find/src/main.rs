@@ -1,5 +1,5 @@
 use std::{
-    fs::{self, DirEntry},
+    fs::{self, DirEntry, ReadDir},
     path::PathBuf,
     str::FromStr,
 };
@@ -22,9 +22,16 @@ struct Find {
     case_insensitivity: bool
 }
 impl Find {
+    fn read_dir(&self, path: &PathBuf) -> anyhow::Result<ReadDir> {
+        match fs::read_dir(path) {
+            Ok(rd) => Ok(rd),
+            Err(e) => Err(anyhow::format_err!("could not read file: \"{}\". {}", path.to_str().unwrap(), e.to_string())),
+        }
+    }
+
     fn find(&mut self, path: String, name: Option<String>) -> anyhow::Result<()> {
         let fs_path = PathBuf::from_str(path.as_str())?;
-        let mut read_dir = fs::read_dir(fs_path)?;
+        let mut read_dir = self.read_dir(&fs_path)?;
         
         let name = name.or(Some("*".into())).unwrap();
         'inner: loop {
@@ -32,7 +39,15 @@ impl Find {
                 None => {
                     read_dir = match self.folders.pop() {
                         None => break 'inner,
-                        Some(entry) => fs::read_dir(entry.path())?,
+                        Some(entry) => {
+                            match self.read_dir(&entry.path()) {
+                                Ok(rd) => rd,
+                                Err(e) => {
+                                    eprintln!("{}", e.to_string());
+                                    continue
+                                },
+                            }
+                        }
                     }
                 }
                 Some(entry) => {
