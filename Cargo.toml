@@ -1,6 +1,6 @@
 [workspace]
 
-members = [ "find", "sha256sum"]
+members = [ "find", "sha256sum", "cp"]
 
 [workspace.dependencies]
 clap = { version = "^4" }
